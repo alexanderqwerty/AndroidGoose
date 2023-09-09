@@ -2,7 +2,10 @@ package com.github.alexanderqwerty.androidgoose
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color.red
 import android.graphics.PixelFormat
+import android.graphics.Rect
+import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
@@ -10,7 +13,10 @@ import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 
+@RequiresApi(Build.VERSION_CODES.R)
 @SuppressLint("ClickableViewAccessibility")
 class FloatingImage(context: Context) {
     private val windowManager: WindowManager =
@@ -19,13 +25,15 @@ class FloatingImage(context: Context) {
     private val textView: TextView = TextView(context)
     private var lastX = 0
     private var lastY = 0
-    private val displayMetrics = DisplayMetrics()
+    private val displayMetrics: Rect
     private val screenWidth: Int
     private val screenHeight: Int
 
     init {
         // Настройте изображение и его размеры здесь
         imageView.setImageResource(R.drawable.ic_launcher_foreground)
+//        imageView.setBackgroundColor(ContextCompat.getColor(context, R.color.purple_200))
+
         textView.text = "0"
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -35,50 +43,86 @@ class FloatingImage(context: Context) {
             PixelFormat.TRANSLUCENT
         )
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-        screenWidth = displayMetrics.widthPixels
-        screenHeight = displayMetrics.heightPixels
-
+        displayMetrics = windowManager.currentWindowMetrics.bounds
+        screenWidth = displayMetrics.width()
+        screenHeight = displayMetrics.height()
+        Log.i("FloatingImage", "screenWidth: $screenWidth screenHeight: $screenHeight")
         params.gravity = Gravity.TOP or Gravity.START
         windowManager.addView(imageView, params)
         windowManager.addView(textView, params)
-        // Добавьте слушатель событий перемещения
+//         Добавьте слушатель событий перемещения
         imageView.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     lastX = event.rawX.toInt()
                     lastY = event.rawY.toInt()
+                    Log.i("FloatingImage", "params: x: ${params.x}, y: ${params.y}")
+                    Log.i("FloatingImage", "x: ${lastX}, y: ${lastY}")
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val deltaX = (event.rawX - lastX).toInt()
                     val deltaY = (event.rawY - lastY).toInt()
-                    val params = imageView.layoutParams as WindowManager.LayoutParams
                     params.x += deltaX
                     params.y += deltaY
-
+//                    imageView.translationX = params.x.toFloat()
+//                    imageView.translationY = params.y.toFloat()
                     // Ограничьте перемещение изображения, чтобы оно не выходило за пределы экрана
-                    if (params.x < 0) params.x = 0
-                    if (params.y < 0) params.y = 0
-                    if (params.x > screenWidth - imageView.width) params.x =
-                        screenWidth - imageView.width
-                    if (params.y > screenHeight - imageView.height) params.y =
-                        screenHeight - imageView.height
-
+                    if (params.x < 0) imageView.translationX = params.x.toFloat()
+                    if (params.y < 0) imageView.translationY = params.y.toFloat()
+                    if (params.x > screenWidth - imageView.width) imageView.translationX =
+                        params.x.toFloat() - screenWidth + imageView.width
+                    if (params.y > screenHeight - imageView.height) imageView.translationY =
+                        params.y.toFloat() - screenHeight + imageView.height
+                    if (params.x > 0 && params.y > 0 && params.x < screenWidth - imageView.width && params.y < screenHeight - imageView.height) {
+                        imageView.translationY = 0f
+                        imageView.translationX = 0f
+                    }
                     windowManager.updateViewLayout(imageView, params)
 
                     // Проверьте, близко ли изображение к краю экрана и удалите службу при необходимости
-                    if (params.x < 50 || params.y < 50 || params.x > screenWidth - 50 || params.y > screenHeight - 50) {
-                        remove()
+                    if (params.x < 0 || params.y < 0 || params.x > screenWidth || params.y > screenHeight) {
+                        //remove()
                     }
 
                     lastX = event.rawX.toInt()
                     lastY = event.rawY.toInt()
+
                     true
                 }
                 else -> false
             }
         }
+//        imageView.setOnTouchListener { _, event ->
+//            when (event.action) {
+//                MotionEvent.ACTION_DOWN -> {
+//                    lastX = event.rawX.toInt()
+//                    lastY = event.rawY.toInt()
+//                    true
+//                }
+//                MotionEvent.ACTION_MOVE -> {
+//                    val deltaX = (event.rawX - lastX).toInt()
+//                    val deltaY = (event.rawY - lastY).toInt()
+//                    params.x += deltaX
+//                    params.y += deltaY
+//
+//                    // Обновите параметры изображения
+//                    windowManager.updateViewLayout(imageView, params)
+//
+//                    // Обновите координаты изображения в ImageView
+//                    imageView.translationX = params.x.toFloat()
+//                    imageView.translationY = params.y.toFloat()
+//
+//
+//                    lastX = event.rawX.toInt()
+//                    lastY = event.rawY.toInt()
+//
+//                    true
+//                }
+//                else -> false
+//            }
+//        }
+
     }
 
     private fun remove() {
