@@ -8,6 +8,7 @@ import android.graphics.Insets
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.Build
+import android.os.Parcel
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
@@ -43,6 +44,7 @@ class FloatingImage(context: Context) {
         imageView.setBackgroundColor(ContextCompat.getColor(context, R.color.purple_200))
 
         textView.text = "0"
+
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -50,6 +52,7 @@ class FloatingImage(context: Context) {
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
+
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 //        val screenWidth = rootView.width
 //        val screenHeight = rootView.height
@@ -59,7 +62,6 @@ class FloatingImage(context: Context) {
         screenHeight = context.display?.height!!.toInt()
         Log.i("FloatingImage", "screenWidth: $screenWidth screenHeight: $screenHeight")
 
-        params.gravity = Gravity.TOP or Gravity.START
         windowManager.addView(imageView, params)
         windowManager.addView(textView, params)
 //         Добавьте слушатель событий перемещения
@@ -73,72 +75,72 @@ class FloatingImage(context: Context) {
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-//                    val deltaX = (event.rawX - lastX).toInt()
-//                    val deltaY = (event.rawY - lastY).toInt()
-//                    params.x += deltaX
-//                    params.y += deltaY
-////                    imageView.translationX = params.x.toFloat()
-////                    imageView.translationY = params.y.toFloat()
-//                    // Ограничьте перемещение изображения, чтобы оно не выходило за пределы экрана
-//                    if (params.x < 0) imageView.translationX = params.x.toFloat()
-//                    if (params.y < 0) imageView.translationY = params.y.toFloat()
-//                    if (params.x > screenWidth - imageView.width) imageView.translationX =
-//                        params.x.toFloat() - screenWidth + imageView.width
-//                    if (params.y > screenHeight - imageView.height) imageView.translationY =
-//                        params.y.toFloat() - screenHeight + imageView.height
-//                    if (params.x > 0 && params.y > 0 && params.x < screenWidth - imageView.width && params.y < screenHeight - imageView.height) {
-//                        imageView.translationY = 0f
-//                        imageView.translationX = 0f
-//                    }
-//                    windowManager.updateViewLayout(imageView, params)
-//
-//                    // Проверьте, близко ли изображение к краю экрана и удалите службу при необходимости
-//                    if (params.x < 0 || params.y < 0 || params.x > screenWidth || params.y > screenHeight) {
-//                        //remove()
-//                    }
+                    val deltaX = (event.rawX - lastX).toInt()
+                    val deltaY = (event.rawY - lastY).toInt()
+                    params.x += deltaX
+                    params.y += deltaY
+//                    imageView.translationX = params.x.toFloat()
+//                    imageView.translationY = params.y.toFloat()
+                    // Ограничьте перемещение изображения, чтобы оно не выходило за пределы экрана
+                    if (params.x < 0) imageView.translationX = params.x.toFloat()
+                    if (params.y < 0) imageView.translationY = params.y.toFloat()
+                    if (params.x > screenWidth - imageView.width) imageView.translationX =
+                        params.x.toFloat() - screenWidth + imageView.width
+                    if (params.y > screenHeight - imageView.height) imageView.translationY =
+                        params.y.toFloat() - screenHeight + imageView.height
+                    if (params.x > 0 && params.y > 0 && params.x < screenWidth - imageView.width && params.y < screenHeight - imageView.height) {
+                        imageView.translationY = 0f
+                        imageView.translationX = 0f
+                    }
+                    windowManager.updateViewLayout(imageView, params)
+
+                    // Проверьте, близко ли изображение к краю экрана и удалите службу при необходимости
+                    if (params.x < 0 || params.y < 0 || params.x > screenWidth || params.y > screenHeight) {
+                        //remove()
+                    }
 
 
                     true
                 }
 
                 MotionEvent.ACTION_UP -> {
-                    val deltaX = (event.rawX - lastX).toInt()
-                    val deltaY = (event.rawY - lastY).toInt()
-
-                    if (animator.isRunning) {
-                        animator.cancel()
-                    }
-
-                    val distance = sqrt((deltaX * deltaX + deltaY * deltaY).toDouble())
-                    animator.duration =
-                        (distance / speed).toLong() // Продолжительность анимации в миллисекундах (1 секунда)
-                    val startX = params.x
-                    val startY = params.y
-                    animator.addUpdateListener { valueAnimator ->
-                        val fraction = valueAnimator.animatedFraction
-                        params.x = (startX + (deltaX) * fraction).toInt()
-                        params.y = (startY + (deltaY) * fraction).toInt()
-                        if (params.x > 0 && params.x < screenWidth - imageView.width)
-                            imageView.translationX = 0f
-                        if (params.y > 0 && params.y < screenHeight - imageView.height)
-                            imageView.translationY = 0f
-                        if (params.x < 0)
-                            imageView.translationX = params.x.toFloat()
-                        if (params.y < 0)
-                            imageView.translationY = params.y.toFloat()
-                        if (params.x > screenWidth - imageView.width)
-                            imageView.translationX = params.x.toFloat() - screenWidth + imageView.width
-                        if (params.y > screenHeight - imageView.height)
-                            imageView.translationY = params.y.toFloat() - screenHeight + imageView.height
-
-                        windowManager.updateViewLayout(imageView, params)
-                    }
-
-                    animator.start()
-
-
-                    Log.i("FloatingImage2", "params: x: ${params.x}, y: ${params.y}")
-                    Log.i("FloatingImage2", "x: $lastX, y: $lastY")
+//                    val deltaX = (event.rawX - lastX).toInt()
+//                    val deltaY = (event.rawY - lastY).toInt()
+//
+//                    if (animator.isRunning) {
+//                        animator.cancel()
+//                    }
+//
+//                    val distance = sqrt((deltaX * deltaX + deltaY * deltaY).toDouble())
+//                    animator.duration =
+//                        (distance / speed).toLong() // Продолжительность анимации в миллисекундах (1 секунда)
+//                    val startX = params.x
+//                    val startY = params.y
+//                    animator.addUpdateListener { valueAnimator ->
+//                        val fraction = valueAnimator.animatedFraction
+//                        params.x = (startX + (deltaX) * fraction).toInt()
+//                        params.y = (startY + (deltaY) * fraction).toInt()
+//                        if (params.x > 0 && params.x < screenWidth - imageView.width)
+//                            imageView.translationX = 0f
+//                        if (params.y > 0 && params.y < screenHeight - imageView.height)
+//                            imageView.translationY = 0f
+//                        if (params.x < 0)
+//                            imageView.translationX = params.x.toFloat()
+//                        if (params.y < 0)
+//                            imageView.translationY = params.y.toFloat()
+//                        if (params.x > screenWidth - imageView.width)
+//                            imageView.translationX = params.x.toFloat() - screenWidth + imageView.width
+//                        if (params.y > screenHeight - imageView.height)
+//                            imageView.translationY = params.y.toFloat() - screenHeight + imageView.height
+//
+//                        windowManager.updateViewLayout(imageView, params)
+//                    }
+//
+//                    animator.start()
+//
+//
+//                    Log.i("FloatingImage2", "params: x: ${params.x}, y: ${params.y}")
+//                    Log.i("FloatingImage2", "x: $lastX, y: $lastY")
                     true
                 }
 
