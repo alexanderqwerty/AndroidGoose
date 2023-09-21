@@ -8,17 +8,23 @@ import android.os.Build
 import android.os.IBinder
 import android.view.*
 import androidx.annotation.RequiresApi
+import kotlinx.coroutines.*
 
 @RequiresApi(Build.VERSION_CODES.R)
 class FloatingViewService : Service() {
-    private lateinit var windowManager: WindowManager
-    private lateinit var view: View
+
+    private lateinit var view1: FloatingView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate() {
         super.onCreate()
-        val floatingViewManager = FloatingViewManager(this)
-        floatingViewManager.setOnTouchListener()
+        view1 = FloatingView(this, View.inflate(this, R.layout.draggableview, null))
+        view1.setOnTouchListener()
+        view1.animatedMoveTo(
+            view1.screenWidth - view1.floatingView.width / 2,
+            view1.screenHeight - view1.floatingView.height
+        )
+
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -27,10 +33,6 @@ class FloatingViewService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        remove()
-    }
-
-    private fun remove() {
-        windowManager.removeView(view)
+        view1.remove()
     }
 }
