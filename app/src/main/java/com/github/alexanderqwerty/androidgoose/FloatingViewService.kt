@@ -13,12 +13,14 @@ import kotlinx.coroutines.*
 @RequiresApi(Build.VERSION_CODES.R)
 class FloatingViewService : Service() {
 
-    private lateinit var view1: FloatingView
+    private lateinit var view1: FloatingImageView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate() {
         super.onCreate()
-        view1 = FloatingView(this, View.inflate(this, R.layout.draggableview, null))
+        view1 = FloatingImageView(this)
+        view1.floatingView = View.inflate(this, R.layout.draggableview, null)
+        view1.setImage(R.raw.a)
         view1.setOnTouchListener()
         view1.animatedMoveTo(
             view1.screenWidth - view1.floatingView.width / 2,

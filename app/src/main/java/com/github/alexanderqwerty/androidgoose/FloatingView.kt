@@ -11,8 +11,30 @@ import androidx.annotation.RequiresApi
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("ViewConstructor")
-class FloatingView(context: Context, override var floatingView: View) : View(context),
+open class FloatingView(context: Context) : View(context),
     FloatingInterface {
+    final override var floatingView: View = inflate(context, R.layout.draggableview, null)
+        set(value) {
+            windowManager.removeView(floatingView)
+            field = value
+            floatingView.measure(
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            )
+            floatingView.layout(0, 0, floatingView.measuredWidth, floatingView.measuredHeight)
+            windowManager.addView(floatingView, params)
+        }
+
+    override fun update() {
+        windowManager.removeView(floatingView)
+        floatingView.measure(
+            MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+            MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        )
+        floatingView.layout(0, 0, floatingView.measuredWidth, floatingView.measuredHeight)
+        windowManager.addView(floatingView, params)
+    }
+
     override var lastX: Int = 0
     override var lastY: Int = 0
     override val screenWidth: Int = context.resources.displayMetrics.widthPixels
@@ -21,7 +43,7 @@ class FloatingView(context: Context, override var floatingView: View) : View(con
     private val animator: ValueAnimator = ValueAnimator.ofInt(0)
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
+    final override val params: WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -38,7 +60,6 @@ class FloatingView(context: Context, override var floatingView: View) : View(con
             MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         )
         floatingView.layout(0, 0, floatingView.measuredWidth, floatingView.measuredHeight)
-
     }
 
     /** set default onTouchListener */
@@ -55,6 +76,7 @@ class FloatingView(context: Context, override var floatingView: View) : View(con
                     Log.i("FloatingViewManager", "lastX: $lastX, lastY: $lastY")
                     true
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     val deltaX = (event.rawX - lastX).toInt()
                     val deltaY = (event.rawY - lastY).toInt()
@@ -64,9 +86,11 @@ class FloatingView(context: Context, override var floatingView: View) : View(con
                     lastY = event.rawY.toInt()
                     true
                 }
+
                 MotionEvent.ACTION_UP -> {
                     true
                 }
+
                 else -> false
             }
         }
@@ -105,7 +129,7 @@ class FloatingView(context: Context, override var floatingView: View) : View(con
         val deltaY = y - params.y
         val distance = kotlin.math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble())
         animator.duration =
-            (distance).toLong() // Продолжительность анимации в миллисекундах (1 секунда)
+            (distance).toLong()
         val startX = params.x
         val startY = params.y
         animator.addUpdateListener { valueAnimator ->

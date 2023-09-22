@@ -10,7 +10,7 @@ interface FloatingInterface {
     val screenHeight: Int
     val params: WindowManager.LayoutParams
     var floatingView: View
-
+    fun update()
     fun moveTo(x: Int, y: Int)
     fun animatedMoveTo(x: Int, y: Int)
     fun remove()
